@@ -22,6 +22,29 @@ lm = 0.02 # значение параметра лямбда для вычисл
 Qe = np.sum(L(X.T, Y, w))/sz   # начальное значение среднего эмпирического риска
 np.random.seed(0) # генерация одинаковых последовательностей псевдослучайных чисел
 
+plt.ion()
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+
+# График функции и модели
+line1, = ax1.plot(coord_x, coord_y, label='func')
+coord_a = [model(x, w) for x in coord_x]
+line2, = ax1.plot(coord_x, coord_a, label='model_a')
+ax1.legend()
+ax1.grid(True)
+ax1.set_title("Сравнение функции и модели")
+
+
+# График Qe
+line3, = ax2.plot([], [], label='Qe', color='r')
+ax2.set_xlim(0, N + 20)
+ax2.set_ylim(0, 12)
+ax2.set_title("Изменение Qe по итерациям")
+ax2.grid(True)
+ax2.legend()
+
+Qe_values = []
+
+
 while(N > 0):
     k = np.random.randint(0, sz) # sz - размер выборки (массива coord_x)
     grad = 2 * ((w @ X[k].T) - Y[k]) * X[k]
@@ -29,4 +52,17 @@ while(N > 0):
     Qe = lm * (L(X[k], Y[k], w)) + (1 - lm) * Qe
     N -= 1
 
+    Qe_values.append(Qe)
+
+    coord_a = [model(x, w) for x in coord_x]
+    line2.set_ydata(coord_a)
+
+    line3.set_data(range(len(Qe_values)), Qe_values)
+
+    fig.canvas.draw()
+    fig.canvas.flush_events()
+    time.sleep(0.1)
+
 Q = np.sum(L(X.T, Y, w))/sz
+plt.ioff()
+plt.show()
