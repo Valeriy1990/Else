@@ -66,3 +66,41 @@ while(N > 0):
 Q = np.sum(L(X.T, Y, w))/sz
 plt.ioff()
 plt.show()
+
+
+'''Стохастический градиентный спуск c использованием батчей'''
+
+import numpy as np
+
+# исходная функция, которую нужно аппроксимировать моделью a(x)
+def func(x):
+    return 0.5 * x + 0.2 * x ** 2 - 0.05 * x ** 3 + 0.2 * np.sin(4 * x) - 2.5
+
+def L(x, y, w):
+    return ((w.T @ x) - y)**2 
+
+coord_x = np.arange(-4.0, 6.0, 0.1) # значения по оси абсцисс [-4; 6] с шагом 0.1
+X = np.array([(1, x, x**2, x**3) for x in coord_x])
+Y = np.array(func(coord_x)) # значения функции по оси ординат
+
+sz = len(coord_x)	# количество значений функций (точек)
+eta = np.array([0.1, 0.01, 0.001, 0.0001]) # шаг обучения для каждого параметра w0, w1, w2, w3
+w = np.array([0., 0., 0., 0.]) # начальные значения параметров модели
+N = 500 # число итераций алгоритма SGD
+lm = 0.02 # значение параметра лямбда для вычисления скользящего экспоненциального среднего
+batch_size = 50 # размер мини-батча (величина K = 50)
+
+Qe = np.sum(L(X.T, Y, w))/sz   # начальное значение среднего эмпирического риска
+np.random.seed(0) # генерация одинаковых последовательностей псевдослучайных чисел
+
+while(N > 0):
+    k = np.random.randint(0, sz-batch_size) # sz - размер выборки (массива coord_x)
+    grad = np.sum([((w @ X[i].T) - Y[i]) * X[i] for i in range(k, k+batch_size)], axis=0) * 2 / batch_size  
+    Qk = np.sum([L(X[i], Y[i], w) for i in range(k, k+batch_size)]) / batch_size
+    w = w - eta * grad
+    Qe = lm * Qk + (1 - lm) * Qe
+    N -= 1
+
+Q = np.sum(L(X.T, Y, w))/sz
+
+print(Q)
